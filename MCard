@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday!</title>
+  <style>
+    :root {
+      --bg-color: #f4ebe1;
+      --card-bg: #fffbf7;
+      --accent: #e88d9d;
+      --text: #4a3e3d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: radial-gradient(#d3c5b4 1px, transparent 1px);
+      background-size: 20px 20px;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    .container {
+      perspective: 1500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 20px;
+    }
+
+    /* Card Wrapper */
+    .card-spread {
+      position: relative;
+      width: 400px;
+      height: 600px;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1), width 0.8s, height 0.8s;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      border-radius: 12px;
+    }
+
+    .card-spread.open {
+      width: 800px;
+      transform: translateX(0);
+    }
+
+    /* Left and Right Pages */
+    .page {
+      position: absolute;
+      top: 0;
+      width: 400px;
+      height: 100%;
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #e0d5c8;
+    }
+
+    .page-left {
+      left: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-image: radial-gradient(#f7e1e6 10%, transparent 11%);
+      background-size: 15px 15px;
+    }
+
+    .page-right {
+      right: 0;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      background-image: radial-gradient(#f7e1e6 10%, transparent 11%);
+      background-size: 15px 15px;
+    }
+
+    /* Cover Page (Folds out) */
+    .cover-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 400px;
+      height: 100%;
+      background: #fff;
+      border-radius: 12px;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+      z-index: 10;
+      cursor: pointer;
+      border: 2px solid #e0d5c8;
+      box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+    }
+
+    .card-spread.open .cover-page {
+      transform: rotateY(-180deg);
+      pointer-events: none;
+    }
+
+    .cover-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    /* Back Cover (inside left cover when flipped) */
+    .cover-back {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--card-bg);
+      transform: rotateY(180deg);
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-image: linear-gradient(#eee 1px, transparent 1px);
+      background-size: 100% 1.2em;
+    }
+
+    /* Letter / Envelope Section */
+    .envelope-container {
+      position: relative;
+      width: 320px;
+      height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .envelope-img {
+      position: absolute;
+      bottom: 20px;
+      width: 280px;
+      z-index: 2;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+    }
+
+    .letter-card {
+      position: absolute;
+      bottom: 40px;
+      width: 250px;
+      height: 380px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 1;
+      cursor: pointer;
+      overflow: hidden;
+      border: 1px solid #eee;
+    }
+
+    .letter-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .letter-card.extracted {
+      transform: translateY(-80px) scale(1.25);
+      z-index: 5;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.25);
+    }
+
+    .click-hint {
+      position: absolute;
+      bottom: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      border: 1px dashed var(--accent);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* Candles / Cake Section */
+    .cake-container {
+      position: relative;
+      width: 320px;
+      height: 420px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .cake-img {
+      width: 100%;
+      height: auto;
+      max-height: 400px;
+      object-fit: contain;
+    }
+
+    /* Flames */
+    .flame-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .flame {
+      position: absolute;
+      width: 24px;
+      height: 36px;
+      background: radial-gradient(circle, #fff 20%, #ffeb3b 50%, #ff5722 100%);
+      border-radius: 50% 50% 20% 20% / 80% 80% 30% 30%;
+      box-shadow: 0 0 12px #ff9800, 0 0 24px #ff5722;
+      transform-origin: bottom center;
+      transition: transform 0.1s ease-out, opacity 0.4s ease;
+      animation: flicker 0.15s infinite alternate;
+    }
+
+    @keyframes flicker {
+      0% { transform: scale(1) rotate(-1deg); }
+      100% { transform: scale(1.08) rotate(1deg); }
+    }
+
+    .flame.extinguished {
+      opacity: 0 !important;
+      transform: scale(0) !important;
+    }
+
+    /* Candle positions relative to cake container */
+    .flame-1 { top: 185px; left: 82px; }
+    .flame-2 { top: 145px; left: 150px; }
+    .flame-3 { top: 195px; left: 168px; }
+    .flame-4 { top: 135px; left: 208px; }
+    .flame-5 { top: 170px; left: 240px; }
+
+    /* Controls & UI */
+    .nav-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #fff;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      display: none;
+    }
+
+    .nav-btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .mic-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .meter-bar {
+      width: 100px;
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #ccc;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      transition: width 0.05s ease;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      background: #ffe0e6;
+      border: 1px solid var(--accent);
+      border-radius: 15px;
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .action-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Wish Overlay Message */
+    .wish-message {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.5);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px 30px;
+      border-radius: 15px;
+      border: 3px dashed var(--accent);
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 20;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .wish-message.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: auto;
+    }
+
+    .wish-message h2 {
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    /* Canvas Confetti */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="container">
+  <div class="card-spread" id="cardSpread">
+    
+    <div class="cover-page" id="coverPage" onclick="openCard()">
+      <img class="cover-image" src="Your paragraph text.png" alt="Cover">
+    </div>
+
+    <div class="page page-left">
+      <div class="envelope-container">
+        <div class="letter-card" id="letterCard" onclick="toggleLetter(event)">
+          <img src="You paragraph text (2).png" alt="Letter Text">
+        </div>
+        <img class="envelope-img" src="Your paragraph text (3).png" alt="Envelope">
+        <div class="click-hint">Tap letter to read / tuck back</div>
+      </div>
+    </div>
+
+    <div class="page page-right">
+      <div class="cake-container">
+        <img class="cake-img" src="Your paragraph text (1).png" alt="Cake">
+        <div class="flame-container" id="flameContainer">
+          <div class="flame flame-1"></div>
+          <div class="flame flame-2"></div>
+          <div class="flame flame-3"></div>
+          <div class="flame flame-4"></div>
+          <div class="flame flame-5"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="mic-indicator">
+          <span>Mic Blow:</span>
+          <div class="meter-bar"><div class="meter-fill" id="meterFill"></div></div>
+        </div>
+        <button class="action-btn" id="blowBtn" onmousedown="startBlowing()" onmouseup="stopBlowing()" ontouchstart="startBlowing()" ontouchend="stopBlowing()">
+          Hold to Blow (or press Space)
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="nav-btn" id="backBtn" onclick="closeCard()">← Back to Cover</button>
+</div>
+
+<div class="wish-message" id="wishMessage">
+  <h2>Make a wish! ✨</h2>
+  <p>May all your dreams come true!</p>
+  <br>
+  <button class="action-btn" onclick="relightCandles()">Relight Candles 🕯️</button>
+</div>
+
+<script>
+  let isCardOpen = false;
+  let isLetterExtracted = false;
+  let blowingTime = 0;
+  let blowInterval = null;
+  let isBlowing = false;
+  let audioContext = null;
+  let analyser = null;
+  let microphone = null;
+  let candlesLit = true;
+
+  // DOM Elements
+  const cardSpread = document.getElementById('cardSpread');
+  const backBtn = document.getElementById('backBtn');
+  const letterCard = document.getElementById('letterCard');
+  const meterFill = document.getElementById('meterFill');
+  const wishMessage = document.getElementById('wishMessage');
+  const flames = document.querySelectorAll('.flame');
+
+  function openCard() {
+    if (!isCardOpen) {
+      cardSpread.classList.add('open');
+      backBtn.style.display = 'block';
+      isCardOpen = true;
+      initMic();
+    }
+  }
+
+  function closeCard() {
+    if (isCardOpen) {
+      cardSpread.classList.remove('open');
+      backBtn.style.display = 'none';
+      isCardOpen = false;
+      if (isLetterExtracted) toggleLetter();
+    }
+  }
+
+  function toggleLetter(e) {
+    if (e) e.stopPropagation();
+    isLetterExtracted = !isLetterExtracted;
+    if (isLetterExtracted) {
+      letterCard.classList.add('extracted');
+    } else {
+      letterCard.classList.remove('extracted');
+    }
+  }
+
+  // --- Blow Logic & Controls ---
+  function applyBlowForce(intensity) {
+    if (!candlesLit) return;
+
+    meterFill.style.width = Math.min(100, intensity * 100) + '%';
+
+    if (intensity > 0.25) {
+      // Bend flames sideways
+      flames.forEach(flame => {
+        const bend = (Math.random() * 20 + 10) * (Math.random() > 0.5 ? 1 : -1);
+        flame.style.transform = `skewX(${bend}deg) scaleY(0.7)`;
+      });
+
+      blowingTime += 0.08;
+      if (blowingTime >= 0.5) {
+        extinguishCandles();
+      }
+    } else {
+      // Reset flame bending
+      flames.forEach(flame => {
+        flame.style.transform = '';
+      });
+      blowingTime = Math.max(0, blowingTime - 0.05);
+    }
+  }
+
+  function startBlowing() {
+    isBlowing = true;
+    if (blowInterval) clearInterval(blowInterval);
+    blowInterval = setInterval(() => {
+      if (isBlowing) applyBlowForce(0.6);
+    }, 50);
+  }
+
+  function stopBlowing() {
+    isBlowing = false;
+    if (blowInterval) clearInterval(blowInterval);
+    applyBlowForce(0);
+  }
+
+  // Keyboard Spacebar listener
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !e.repeat && isCardOpen) {
+      startBlowing();
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space' && isCardOpen) {
+      stopBlowing();
+    }
+  });
+
+  function extinguishCandles() {
+    candlesLit = false;
+    flames.forEach(flame => flame.classList.add('extinguished'));
+    meterFill.style.width = '0%';
+    setTimeout(() => {
+      wishMessage.classList.add('show');
+      triggerConfetti();
+    }, 300);
+  }
+
+  function relightCandles() {
+    candlesLit = true;
+    blowingTime = 0;
+    flames.forEach(flame => flame.classList.remove('extinguished'));
+    wishMessage.classList.remove('show');
+  }
+
+  // --- Web Audio API (Microphone Detection) ---
+  async function initMic() {
+    if (audioContext) return; // Already initialized
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      microphone = audioContext.createMediaStreamSource(stream);
+      
+      analyser.fftSize = 256;
+      microphone.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function checkAudioLevel() {
+        if (candlesLit && isCardOpen) {
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i];
+          }
+          let average = sum / bufferLength;
+          let normalized = average / 128; // Scale 0.0 to 1.0
+          
+          if (!isBlowing) {
+            applyBlowForce(normalized);
+          }
+        }
+        requestAnimationFrame(checkAudioLevel);
+      }
+      checkAudioLevel();
+    } catch (err) {
+      console.warn("Microphone access denied or not supported on http/local file.", err);
+    }
+  }
+
+  // --- Simple Confetti Particle Generator ---
+  function triggerConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+
+    for (let i = 0; i < 120; i++) {
+      particles.push({
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        vx: (Math.random() - 0.5) * 12,
+        vy: (Math.random() - 0.7) * 12,
+        size: Math.random() * 8 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        rSpeed: (Math.random() - 0.5) * 10
+      });
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let active = false;
+
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.2; // gravity
+        p.rotation += p.rSpeed;
+
+        if (p.y < canvas.height) active = true;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      });
+
+      if (active) {
+        requestAnimationFrame(render);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    render();
+  }
+</script>
+</body>
+</html>
